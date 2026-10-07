@@ -2,7 +2,7 @@
   import BeamText from "./BeamText.svelte";
   import Icon from "./Icon.svelte";
   import { store } from "../lib/store.svelte";
-  import { REGIONS, bytes, flag, mapName, plain, region, serverKey } from "../lib/beam";
+  import { REGIONS, bytes, mapName, plain, region, serverKey } from "../lib/beam";
   import type { Server } from "../lib/types";
 
   type Sort = "players" | "name" | "map" | "mods" | "ping";
@@ -121,15 +121,15 @@
   const shownPlayers = $derived(filtered.reduce((n, s) => n + s.players, 0));
 </script>
 
-<div class="browser fade-in">
+<div class="browser">
   <header>
     <div class="title">
-      <h1 class="display">Servers</h1>
+      <h1 class="page-title">Servers</h1>
       <span class="muted">{filtered.length.toLocaleString()} servers · {shownPlayers.toLocaleString()} drivers</span>
     </div>
     <div class="actions">
-      <button class="btn btn-ghost btn-sm" onclick={() => (store.directOpen = true)}><Icon name="link" size={15} /> Direct connect</button>
-      <button class="btn btn-ghost btn-sm" onclick={pingVisible} title="Measure ping to the servers on screen"><Icon name="signal" size={15} /> Ping</button>
+      <button class="btn btn-secondary btn-sm" onclick={() => (store.directOpen = true)}><Icon name="link" size={15} /> Direct connect</button>
+      <button class="btn btn-secondary btn-sm" onclick={pingVisible} title="Measure ping to the servers on screen"><Icon name="signal" size={15} /> Ping</button>
       <button class="icon-btn" onclick={() => store.loadServers(true)} title="Refresh list">
         <span class:spin={store.loadingServers}><Icon name="refresh" size={18} /></span>
       </button>
@@ -151,15 +151,15 @@
       {#each Object.entries(REGIONS) as [code, label]}<option value={code}>{label}</option>{/each}
     </select>
   </div>
-  <div class="chips">
-    <button class="chip" class:on={hideEmpty} onclick={() => (hideEmpty = !hideEmpty)}>Has players</button>
-    <button class="chip" class:on={hideFull} onclick={() => (hideFull = !hideFull)}>Not full</button>
-    <button class="chip" class:on={noMods} onclick={() => (noMods = !noMods)}>No mods</button>
-    <button class="chip" class:on={officialOnly} onclick={() => (officialOnly = !officialOnly)}>Official</button>
-    <button class="chip" class:on={spotlightOnly} onclick={() => (spotlightOnly = !spotlightOnly)}>Featured & partners</button>
-    <button class="chip" class:on={favoritesOnly} onclick={() => (favoritesOnly = !favoritesOnly)}><Icon name="star" size={13} /> Favorites</button>
-    <button class="chip" class:on={hideLocked} onclick={() => (hideLocked = !hideLocked)}><Icon name="lock" size={12} /> Hide locked</button>
-    <button class="chip reset" onclick={resetFilters}>Reset</button>
+  <div class="toggles">
+    <button class="toggle" class:on={hideEmpty} onclick={() => (hideEmpty = !hideEmpty)}>Has players</button>
+    <button class="toggle" class:on={hideFull} onclick={() => (hideFull = !hideFull)}>Not full</button>
+    <button class="toggle" class:on={noMods} onclick={() => (noMods = !noMods)}>No mods</button>
+    <button class="toggle" class:on={officialOnly} onclick={() => (officialOnly = !officialOnly)}>Official</button>
+    <button class="toggle" class:on={spotlightOnly} onclick={() => (spotlightOnly = !spotlightOnly)}>Featured & partners</button>
+    <button class="toggle" class:on={favoritesOnly} onclick={() => (favoritesOnly = !favoritesOnly)}><Icon name="star" size={13} /> Favorites</button>
+    <button class="toggle" class:on={hideLocked} onclick={() => (hideLocked = !hideLocked)}><Icon name="lock" size={12} /> Hide locked</button>
+    <button class="btn btn-quiet btn-sm reset" onclick={resetFilters}>Reset</button>
   </div>
 
   <div class="table panel">
@@ -183,13 +183,13 @@
           <Icon name="alert" size={28} />
           <div>Couldn't load the server list</div>
           <div class="muted small">{store.serversError}</div>
-          <button class="btn btn-ghost btn-sm" onclick={() => store.loadServers(true)}>Try again</button>
+          <button class="btn btn-secondary btn-sm" onclick={() => store.loadServers(true)}>Try again</button>
         </div>
       {:else if !filtered.length && !store.loadingServers}
         <div class="empty">
           <Icon name="search" size={28} />
           <div>No servers match</div>
-          <button class="btn btn-ghost btn-sm" onclick={resetFilters}>Reset filters</button>
+          <button class="btn btn-secondary btn-sm" onclick={resetFilters}>Reset filters</button>
         </div>
       {/if}
       <div class="spacer" style:height={`${filtered.length * ROW}px`}>
@@ -209,11 +209,11 @@
               <div class="cell-name">
                 <div class="name"><BeamText text={s.name} /></div>
                 <div class="sub">
-                  <span class="flag">{flag(s.location)}</span>
-                  {#if s.partner}<span class="badge partner">Partner</span>{/if}
-                  {#if s.featured}<span class="badge featured">Featured</span>{/if}
-                  {#if s.official}<span class="badge official">Official</span>{/if}
-                  {#if s.password}<span class="badge"><Icon name="lock" size={10} /></span>{/if}
+                  <span class="region">{s.location || "--"}</span>
+                  {#if s.partner}<span class="tag partner">Partner</span>{/if}
+                  {#if s.featured}<span class="tag featured">Featured</span>{/if}
+                  {#if s.official}<span class="tag official">Official</span>{/if}
+                  {#if s.password}<Icon name="lock" size={12} />{/if}
                   {#if hit}<span class="hit"><Icon name="users" size={11} /> {hit}</span>
                   {:else}<span class="muted owner">{s.tags.slice(0, 3).join(" · ") || s.owner}</span>{/if}
                 </div>
@@ -221,7 +221,7 @@
               <div class="cell-map">{mapName(s.map)}</div>
               <div class="cell-players">
                 <span class:zero={s.players === 0} class:full={s.players >= s.max_players && s.max_players > 0}>{s.players}</span><span class="muted">/{s.max_players}</span>
-                <div class="pbar"><div style:width={`${s.max_players ? Math.min(100, (s.players / s.max_players) * 100) : 0}%`}></div></div>
+                <div class="meter pbar"><div class:hot={s.max_players > 0 && s.players >= s.max_players} style:width={`${s.max_players ? Math.min(100, (s.players / s.max_players) * 100) : 0}%`}></div></div>
               </div>
               <div class="cell-mods" class:heavy={s.mods_size > 500 * 1024 * 1024}>
                 {s.mods.length ? bytes(s.mods_size) : "—"}
@@ -233,7 +233,7 @@
                 {:else}<span class:good={p < 80} class:warn={p >= 80 && p < 160} class:bad={p >= 160}>{p} ms</span>{/if}
               </div>
               <div class="cell-join">
-                <button class="btn btn-primary btn-sm" disabled={!store.canPlay} onclick={(e) => { e.stopPropagation(); store.join(s); }}>Join</button>
+                <button class="btn btn-secondary btn-sm join" disabled={!store.canPlay} onclick={(e) => { e.stopPropagation(); store.join(s); }}>Join</button>
               </div>
             </div>
           {/each}
@@ -248,33 +248,31 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 26px 32px 18px;
+    padding: 22px 28px 16px;
     min-height: 0;
   }
   header {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
   }
   .title {
     display: flex;
     align-items: baseline;
-    gap: 14px;
+    gap: 12px;
   }
-  h1 {
-    margin: 0;
-    font-size: 40px;
-    line-height: 1;
+  .title .muted {
+    font-variant-numeric: tabular-nums;
   }
   .actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
   }
   .filters {
     display: flex;
-    gap: 10px;
+    gap: 8px;
   }
   .search {
     flex: 1;
@@ -284,34 +282,31 @@
   }
   .search > :global(svg) {
     position: absolute;
-    left: 13px;
+    left: 11px;
     color: var(--muted);
     pointer-events: none;
   }
   .search input {
     width: 100%;
-    height: 44px;
-    padding-left: 40px;
-    font-size: 14.5px;
+    height: 36px;
+    padding-left: 36px;
   }
   .search .clear {
     position: absolute;
-    right: 5px;
+    right: 3px;
   }
   select {
-    height: 44px;
-    min-width: 170px;
+    height: 36px;
+    min-width: 168px;
   }
-  .chips {
+  .toggles {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 12px 0 14px;
+    gap: 6px;
+    margin: 10px 0 14px;
   }
-  .chip.reset {
+  .reset {
     margin-left: auto;
-    border-color: transparent;
-    color: var(--muted);
   }
   .table {
     flex: 1;
@@ -323,24 +318,19 @@
   .thead,
   .row {
     display: grid;
-    grid-template-columns: 44px minmax(260px, 1fr) 170px 120px 92px 82px 84px;
+    grid-template-columns: 40px minmax(260px, 1fr) 170px 110px 90px 76px 76px;
     align-items: center;
-    padding: 0 12px 0 8px;
+    padding: 0 12px 0 6px;
   }
   .thead {
-    height: 40px;
+    height: 34px;
     border-bottom: 1px solid var(--line);
-    font-family: var(--display);
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    font-size: 12.5px;
-    text-transform: uppercase;
+    font-size: 11.5px;
+    font-weight: 600;
     color: var(--muted);
   }
   .thead button {
     text-align: left;
-    letter-spacing: inherit;
-    text-transform: inherit;
     font-weight: inherit;
     color: inherit;
   }
@@ -364,30 +354,32 @@
   }
   .row {
     height: 64px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.035);
+    border-bottom: 1px solid var(--line);
     cursor: pointer;
     outline: none;
-    transition: background 0.1s;
   }
   .row:hover,
   .row:focus-visible {
-    background: rgba(255, 255, 255, 0.035);
+    background: var(--surface-2);
   }
   .row.sel {
-    background: linear-gradient(90deg, rgba(255, 46, 99, 0.13), rgba(255, 46, 99, 0.02));
-    box-shadow: inset 3px 0 0 var(--accent);
+    background: var(--surface-3);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .row:hover .join:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
   }
   .fav {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: grid;
     place-items: center;
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.25);
+    border-radius: var(--radius);
+    color: #3d424c;
   }
-  .fav:hover {
-    color: var(--warn);
-  }
+  .fav:hover,
   .fav.on {
     color: var(--warn);
   }
@@ -396,8 +388,7 @@
     padding-right: 16px;
   }
   .name {
-    font-weight: 650;
-    font-size: 14px;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -410,9 +401,7 @@
     font-size: 12px;
     white-space: nowrap;
     overflow: hidden;
-  }
-  .flag {
-    font-size: 14px;
+    color: var(--muted);
   }
   .owner {
     overflow: hidden;
@@ -422,8 +411,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: var(--cyan);
-    font-weight: 700;
+    color: var(--info);
+    font-weight: 600;
   }
   .cell-map {
     color: var(--text-2);
@@ -433,40 +422,30 @@
     padding-right: 10px;
   }
   .cell-players {
-    font-weight: 700;
-    font-size: 14px;
-  }
-  .cell-players span:first-child {
-    color: var(--good);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
   }
   .cell-players .zero {
-    color: var(--muted) !important;
+    color: var(--muted);
   }
   .cell-players .full {
-    color: var(--warn) !important;
+    color: var(--warn);
   }
   .pbar {
-    width: 74px;
-    height: 3px;
-    border-radius: 3px;
-    background: rgba(255, 255, 255, 0.07);
+    width: 70px;
     margin-top: 5px;
-    overflow: hidden;
-  }
-  .pbar div {
-    height: 100%;
-    background: var(--grad);
   }
   .cell-mods {
     color: var(--text-2);
-    font-size: 13px;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
   }
   .cell-mods.heavy {
     color: var(--warn);
   }
   .cell-ping {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
   }
   .good {
     color: var(--good);
@@ -487,7 +466,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
     color: var(--text-2);
     z-index: 1;
   }

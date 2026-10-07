@@ -14,7 +14,7 @@ import type {
   View,
 } from "./types";
 
-const inTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+export const inTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (inTauri) {
@@ -102,7 +102,8 @@ let mockView: View = {
   launcher_exit: null,
   game: null,
   join_pending: false,
-  platform: "windows",
+  // `?mac` previews the macOS title bar.
+  platform: typeof location !== "undefined" && location.search.includes("mac") ? "macos" : "windows",
   game_supported: true,
   version: "0.1.0",
 };

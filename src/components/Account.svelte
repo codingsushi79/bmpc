@@ -37,17 +37,17 @@
   }
 </script>
 
-<div class="account fade-in">
-  <h1 class="display">Account</h1>
+<div class="account">
+  <h1 class="page-title">Account</h1>
 
   {#if account?.signed_in}
     <div class="card panel">
-      <div class="avatar display">{(account.username ?? "?").slice(0, 1)}</div>
+      <div class="avatar">{(account.username ?? "?").slice(0, 1)}</div>
       <div class="who">
-        <div class="name display">{account.username}</div>
+        <div class="name">{account.username}</div>
         <div class="muted">{account.role ?? "BeamMP member"}{account.id ? ` · #${account.id}` : ""}</div>
       </div>
-      <button class="btn btn-ghost" onclick={signOut}><Icon name="logout" size={16} /> Sign out</button>
+      <button class="btn btn-secondary" onclick={signOut}><Icon name="logout" size={16} /> Sign out</button>
     </div>
     <p class="muted info">
       BeamMP signs you in automatically when the game starts. Your session key is stored where the official launcher keeps it; BeamLink never saves your password.
@@ -55,14 +55,14 @@
   {:else}
     <div class="grid">
       <form class="panel form" onsubmit={signIn}>
-        <h2 class="display">Sign in to BeamMP</h2>
+        <h2 class="section-title">Sign in to BeamMP</h2>
         <p class="muted">Use your BeamMP forum account. Some servers don't allow guests.</p>
         <label>
-          <span class="eyebrow">Username</span>
+          <span class="label">Username</span>
           <input bind:value={username} autocomplete="username" spellcheck="false" />
         </label>
         <label>
-          <span class="eyebrow">Password</span>
+          <span class="label">Password</span>
           <input type="password" bind:value={password} autocomplete="current-password" />
         </label>
         {#if error}<div class="error"><Icon name="alert" size={15} /> {error}</div>{/if}
@@ -72,11 +72,11 @@
         <button type="button" class="link" onclick={() => api.openUrl("https://forum.beammp.com/signup")}>No account? Create one on forum.beammp.com</button>
       </form>
       <div class="panel guest">
-        <h2 class="display">Play as guest</h2>
+        <h2 class="section-title">Play as guest</h2>
         <p class="muted">
           No account needed. BeamMP gives you a guest name, and you can join any server that allows guests (most do — the browser shows the ones that don't).
         </p>
-        <button class="btn btn-ghost" disabled={!store.canPlay} onclick={() => store.play()}><Icon name="play" size={16} /> Play as guest</button>
+        <button class="btn btn-secondary" disabled={!store.canPlay} onclick={() => store.play()}><Icon name="play" size={16} /> Play as guest</button>
       </div>
     </div>
   {/if}
@@ -91,7 +91,6 @@
   }
   h1 {
     margin: 0 0 18px;
-    font-size: 40px;
   }
   .card {
     display: flex;
@@ -100,20 +99,23 @@
     padding: 22px 24px;
   }
   .avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 18px;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
     display: grid;
     place-items: center;
-    font-size: 36px;
-    background: var(--grad);
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--surface-3);
+    border: 1px solid var(--line-hi);
   }
   .who {
     flex: 1;
   }
   .name {
-    font-size: 30px;
-    line-height: 1;
+    font-size: 17px;
+    font-weight: 650;
   }
   .info {
     margin-top: 14px;
@@ -133,7 +135,7 @@
   }
   h2 {
     margin: 0;
-    font-size: 26px;
+    font-size: 15px;
   }
   p {
     margin: 0;
@@ -148,7 +150,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #ffb3c1;
+    color: var(--bad);
     font-size: 13px;
   }
   .link {

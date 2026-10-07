@@ -438,6 +438,8 @@ pub fn run() {
     let paths = paths::detect(&settings);
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(AppState(Mutex::new(Inner {
             settings,
             paths,
@@ -448,6 +450,11 @@ pub fn run() {
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_title("BeamLink");
+                // The UI draws its own title bar. macOS keeps its native
+                // traffic lights over it (titleBarStyle: Overlay); Windows
+                // and Linux lose the system frame entirely.
+                #[cfg(not(target_os = "macos"))]
+                let _ = window.set_decorations(false);
             }
             Ok(())
         })

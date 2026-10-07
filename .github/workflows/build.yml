@@ -1,5 +1,10 @@
 name: build
 
+# Every push builds signed installers. Pushing a version tag
+# (git tag v0.2.0 && git push origin v0.2.0) also publishes them as a GitHub
+# Release, together with the latest.json manifest that installed copies of
+# BeamLink poll to update themselves.
+
 on:
   push:
     branches: [main]
@@ -30,6 +35,8 @@ jobs:
       - run: cargo test --manifest-path src-tauri/Cargo.toml
 
   bundle:
+    # Needs the signing key secret, which pull requests from forks don't get.
+    if: github.event_name != 'pull_request'
     needs: test
     strategy:
       fail-fast: false
@@ -40,7 +47,8 @@ jobs:
           - os: ubuntu-22.04
             bundles: deb,appimage
           - os: macos-latest
-            bundles: dmg
+            # `app` produces the .app.tar.gz the updater downloads.
+            bundles: app,dmg
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +63,22 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx tauri build --bundles ${{ matrix.bundles }}
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
+        with:
+          args: --bundles ${{ matrix.bundles }}
+          # Empty on branch builds: build only, no release.
+          tagName: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
+          releaseName: BeamLink ${{ github.ref_name }}
+          releaseBody: |
+            **Windows:** download `BeamLink_*_x64-setup.exe` and run it. The installer sets up BeamMP in BeamNG.drive for you. Installed copies update themselves.
+            **Linux:** `.AppImage` (self-updating) or `.deb`. **macOS:** `.dmg` (browse-only; BeamNG.drive doesn't run on macOS).
+          releaseDraft: false
+          prerelease: false
+          includeUpdaterJson: true
       - uses: actions/upload-artifact@v4
         with:
           name: beamlink-${{ matrix.os }}
@@ -65,22 +88,3 @@ jobs:
             src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/bundle/dmg/*.dmg
           if-no-files-found: ignore
-
-  release:
-    # Tag a version (git tag v0.1.0 && git push --tags) and the installers
-    # from the bundle job are published as a GitHub Release.
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: bundle
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/**/*
-          generate_release_notes: true
-          body: |
-            **Windows:** download `BeamLink_*_x64-setup.exe` and run it. The installer sets up BeamMP in BeamNG.drive for you.
-            **Linux:** `.AppImage` or `.deb`. **macOS:** `.dmg` (browse-only; BeamNG.drive doesn't run on macOS).

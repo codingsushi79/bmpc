@@ -56,16 +56,16 @@
 <div class="setup">
   <HeroArt />
   <div class="shade"></div>
-  <div class="card panel fade-in">
-    <div class="eyebrow">Setup</div>
-    <h1 class="display">Get BeamMP <span>ready</span></h1>
+  <div class="card panel">
+    <div class="label">Setup</div>
+    <h1 class="page-title">Set up BeamMP</h1>
     <p class="muted lead">
       BeamLink installs the official BeamMP launcher and client mod into BeamNG.drive, plus a tiny companion mod that lets you join a server here with one click.
     </p>
 
     {#if view && !view.install.game_found}
       <label class="field">
-        <span class="eyebrow">BeamNG.drive folder</span>
+        <span class="label">BeamNG.drive folder</span>
         <input bind:value={gameDir} placeholder="e.g. D:\SteamLibrary\steamapps\common\BeamNG.drive" spellcheck="false" />
         <span class="hint">We couldn't find the game in Steam's libraries. Paste the folder that holds BeamNG.drive.exe.</span>
       </label>
@@ -85,7 +85,7 @@
             {/if}
           </span>
           <div class="text">
-            <div class="label">{step.label}</div>
+            <div class="step-name">{step.label}</div>
             <div class="detail">{p && p.status !== "running" ? p.message : p?.message || step.detail}</div>
             {#if p?.status === "running" && p.total > 0}
               <div class="bar"><div style:width={`${(p.done / p.total) * 100}%`}></div></div>
@@ -105,7 +105,7 @@
         <button class="btn btn-primary" disabled={running || !store.canPlay} onclick={start}>
           {running ? "Installing…" : finished === "err" ? "Try again" : "Install"}
         </button>
-        <button class="btn btn-ghost" disabled={running} onclick={close}>{view?.ready ? "Close" : "Skip for now"}</button>
+        <button class="btn btn-secondary" disabled={running} onclick={close}>{view?.ready ? "Close" : "Skip for now"}</button>
       {/if}
     </div>
     {#if !store.canPlay}
@@ -127,7 +127,7 @@
   .shade {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 50% 40%, rgba(7, 7, 11, 0.55), rgba(7, 7, 11, 0.92));
+    background: rgba(11, 12, 15, 0.82);
   }
   .card {
     position: relative;
@@ -135,20 +135,11 @@
     max-width: calc(100% - 40px);
     max-height: calc(100% - 40px);
     overflow-y: auto;
-    padding: 30px 32px;
-    background: rgba(14, 14, 22, 0.88);
+    padding: 28px 30px;
+    background: var(--surface);
   }
   h1 {
     margin: 6px 0 8px;
-    font-size: 52px;
-    line-height: 0.95;
-  }
-  h1 span {
-    background: var(--grad);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    padding-right: 0.08em;
   }
   .lead {
     line-height: 1.55;
@@ -186,17 +177,17 @@
     display: flex;
     gap: 14px;
     padding: 11px 12px;
-    border-radius: 11px;
+    border-radius: var(--radius);
     border: 1px solid transparent;
   }
   .steps li.running {
-    background: rgba(255, 46, 99, 0.07);
-    border-color: rgba(255, 46, 99, 0.3);
+    background: var(--surface-2);
+    border-color: var(--line-hi);
   }
   .mark {
     width: 26px;
     height: 26px;
-    border-radius: 8px;
+    border-radius: var(--radius);
     flex: none;
     display: grid;
     place-items: center;
@@ -205,7 +196,7 @@
     font-weight: 800;
   }
   .done .mark {
-    background: rgba(61, 220, 132, 0.15);
+    background: rgba(63, 185, 80, 0.15);
     color: var(--good);
   }
   .error .mark {
@@ -219,8 +210,8 @@
     flex: 1;
     min-width: 0;
   }
-  .label {
-    font-weight: 700;
+  .step-name {
+    font-weight: 600;
   }
   .detail {
     font-size: 12.5px;
@@ -229,7 +220,7 @@
     word-break: break-word;
   }
   li.error .detail {
-    color: #ffb3c1;
+    color: var(--bad);
   }
   .bar {
     height: 4px;
@@ -240,14 +231,14 @@
   }
   .bar div {
     height: 100%;
-    background: var(--grad);
+    background: var(--accent);
     transition: width 0.15s;
   }
   div.error {
     display: flex;
     gap: 8px;
     align-items: flex-start;
-    color: #ffb3c1;
+    color: var(--bad);
     font-size: 13px;
     margin-bottom: 14px;
   }

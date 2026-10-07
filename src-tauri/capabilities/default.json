@@ -1,7 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "The main window: core APIs and events only. Folders and links are opened by Rust commands that check what they open.",
+  "description": "The main window: core APIs, its own window controls (custom title bar), and the updater. Folders and links are opened by Rust commands that check what they open.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "core:window:allow-is-maximized",
+    "updater:default",
+    "process:allow-restart"
+  ]
 }

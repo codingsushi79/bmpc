@@ -2,6 +2,7 @@
   import Icon from "./Icon.svelte";
   import { api } from "../lib/api";
   import { store } from "../lib/store.svelte";
+  import { updater } from "../lib/updater.svelte";
   import type { Settings } from "../lib/types";
 
   let draft = $state<Settings | null>(null);
@@ -43,15 +44,15 @@
   }
 </script>
 
-<div class="settings fade-in">
+<div class="settings">
   <header>
-    <h1 class="display">Settings</h1>
+    <h1 class="page-title">Settings</h1>
     <button class="btn btn-primary" disabled={!dirty || saving} onclick={save}>{saving ? "Saving…" : "Save changes"}</button>
   </header>
 
   {#if draft && view}
     <section class="panel">
-      <h2 class="display">Installation</h2>
+      <h2 class="section-title">Installation</h2>
       <div class="status">
         {#each [
           ["BeamNG.drive", view.install.game_found],
@@ -63,7 +64,7 @@
         {/each}
       </div>
       <div class="row-actions">
-        <button class="btn btn-ghost btn-sm" onclick={() => (store.setupOpen = true)}><Icon name="wrench" size={15} /> Run setup / repair</button>
+        <button class="btn btn-secondary btn-sm" onclick={() => (store.setupOpen = true)}><Icon name="wrench" size={15} /> Run setup / repair</button>
         <button class="btn btn-danger btn-sm" onclick={uninstallMods}><Icon name="trash" size={14} /> Remove BeamLink mods from the game</button>
       </div>
       {#if !view.install.launcher_supported}
@@ -74,42 +75,42 @@
     </section>
 
     <section class="panel">
-      <h2 class="display">Folders</h2>
+      <h2 class="section-title">Folders</h2>
       <p class="hint">Leave blank to detect automatically. Detected: {view.paths.notes.join(" · ") || "nothing yet"}.</p>
       <div class="field">
-        <span class="eyebrow">BeamNG.drive install</span>
+        <span class="label">BeamNG.drive install</span>
         <div class="with-btn">
           <input bind:value={draft.game_dir} placeholder={view.paths.game_dir ?? "not found"} spellcheck="false" />
-          <button class="btn btn-ghost btn-sm" onclick={() => folder("game")} disabled={!view.paths.game_dir}><Icon name="folder" size={14} /></button>
+          <button class="btn btn-secondary btn-sm" onclick={() => folder("game")} disabled={!view.paths.game_dir}><Icon name="folder" size={14} /></button>
         </div>
       </div>
       <div class="field">
-        <span class="eyebrow">BeamNG user folder</span>
+        <span class="label">BeamNG user folder</span>
         <div class="with-btn">
           <input bind:value={draft.user_dir} placeholder={view.paths.user_root ?? "not found"} spellcheck="false" />
-          <button class="btn btn-ghost btn-sm" onclick={() => folder("user")} disabled={!view.paths.user_dir}><Icon name="folder" size={14} /></button>
+          <button class="btn btn-secondary btn-sm" onclick={() => folder("user")} disabled={!view.paths.user_dir}><Icon name="folder" size={14} /></button>
         </div>
       </div>
       <div class="field">
-        <span class="eyebrow">BeamMP launcher folder</span>
+        <span class="label">BeamMP launcher folder</span>
         <div class="with-btn">
           <input bind:value={draft.launcher_dir} placeholder={view.paths.launcher_dir} spellcheck="false" />
-          <button class="btn btn-ghost btn-sm" onclick={() => folder("launcher")}><Icon name="folder" size={14} /></button>
+          <button class="btn btn-secondary btn-sm" onclick={() => folder("launcher")}><Icon name="folder" size={14} /></button>
         </div>
       </div>
       {#if view.paths.game_version}<p class="hint">Game version {view.paths.game_version}</p>{/if}
     </section>
 
     <section class="panel">
-      <h2 class="display">Multiplayer</h2>
+      <h2 class="section-title">Multiplayer</h2>
       <div class="two">
         <label class="field">
-          <span class="eyebrow">Launcher port</span>
+          <span class="label">Launcher port</span>
           <input type="number" min="1024" max="65535" bind:value={draft.launcher_port} />
           <span class="hint">Must match BeamMP's in-game setting. Default 4444.</span>
         </label>
         <label class="field">
-          <span class="eyebrow">BeamMP branch</span>
+          <span class="label">BeamMP branch</span>
           <select bind:value={draft.branch}>
             <option value="Default">Default (stable)</option>
             <option value="Public">Public (testing)</option>
@@ -117,7 +118,7 @@
         </label>
       </div>
       <label class="field">
-        <span class="eyebrow">Extra game arguments</span>
+        <span class="label">Extra game arguments</span>
         <input bind:value={draft.game_args} placeholder="e.g. -gfx vk" spellcheck="false" />
       </label>
       <label class="check">
@@ -126,8 +127,33 @@
       </label>
     </section>
 
+    <section class="panel">
+      <h2 class="section-title">Updates</h2>
+      <div class="update-row">
+        <div>
+          <div>BeamLink {view.version}</div>
+          <div class="hint tight">
+            {#if updater.status === "checking"}Checking for updates…
+            {:else if updater.status === "none"}You're on the latest version.
+            {:else if updater.status === "available"}Version {updater.version} is available.
+            {:else if updater.status === "downloading"}Downloading {updater.total ? Math.round((updater.done / updater.total) * 100) : 0}%…
+            {:else if updater.status === "ready"}Installed. Restarting…
+            {:else if updater.status === "error"}Couldn't check: {updater.error}
+            {:else}BeamLink checks for updates on start and every 6 hours.{/if}
+          </div>
+        </div>
+        {#if updater.status === "available"}
+          <button class="btn btn-primary btn-sm" onclick={() => updater.install()}>Install and restart</button>
+        {:else}
+          <button class="btn btn-secondary btn-sm" disabled={updater.status === "checking" || updater.status === "downloading"} onclick={() => updater.check(true)}>
+            Check for updates
+          </button>
+        {/if}
+      </div>
+    </section>
+
     <section class="panel about">
-      <h2 class="display">About</h2>
+      <h2 class="section-title">About</h2>
       <p class="hint">
         BeamLink {view.version}. Multiplayer is powered by the official
         <button class="link" onclick={() => api.openUrl("https://beammp.com")}>BeamMP</button> launcher and client mod, which BeamLink downloads from BeamMP and checks before installing. BeamLink isn't affiliated with BeamMP or BeamNG.
@@ -151,8 +177,6 @@
   }
   h1 {
     margin: 0;
-    font-size: 40px;
-    line-height: 1;
   }
   section {
     padding: 20px 22px;
@@ -160,7 +184,7 @@
   }
   h2 {
     margin: 0 0 14px;
-    font-size: 22px;
+    font-size: 15px;
   }
   .status {
     display: grid;
@@ -173,7 +197,7 @@
     align-items: center;
     gap: 9px;
     padding: 10px 12px;
-    border-radius: 10px;
+    border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--line);
     font-weight: 600;
@@ -206,6 +230,15 @@
   }
   .with-btn .btn {
     height: 42px;
+  }
+  .update-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .hint.tight {
+    margin: 2px 0 0;
   }
   .two {
     display: grid;

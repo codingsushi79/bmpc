@@ -47,6 +47,25 @@ finish. **Settings → Run setup / repair** reruns the same steps. Uninstalling
 runs `BeamLink --remove-mods` first, so no BeamLink files are left in the
 game folders.
 
+## Updates
+
+Installed copies update themselves. On start and every 6 hours BeamLink
+checks the latest release's `latest.json`. When a new version is out, an
+**Update to x.y.z** button appears in the title bar, and Settings → Updates
+has the same option. The installer is checked against the public key built
+into the app before it runs, so only builds signed with the project's key
+are accepted. Windows updates install silently and the app restarts into
+the new version.
+
+To publish an update, bump the version in `src-tauri/tauri.conf.json`,
+`src-tauri/Cargo.toml` and `package.json`, then push a tag:
+
+```bash
+git tag v0.2.1 && git push origin v0.2.1
+```
+
+CI signs the build with the `TAURI_SIGNING_PRIVATE_KEY` repository secret.
+
 ## Features
 
 - **Server browser** for the full public list (~2,700 servers), virtualised

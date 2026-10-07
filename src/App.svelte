@@ -12,8 +12,10 @@
   import DirectConnect from "./components/DirectConnect.svelte";
   import BeamText from "./components/BeamText.svelte";
   import Icon from "./components/Icon.svelte";
+  import TitleBar from "./components/TitleBar.svelte";
   import { api } from "./lib/api";
   import { store } from "./lib/store.svelte";
+  import { updater } from "./lib/updater.svelte";
 
   let booted = $state(false);
 
@@ -24,6 +26,7 @@
       if (store.view && store.view.game_supported && !store.view.ready) store.setupOpen = true;
       booted = true;
       store.loadServers();
+      updater.start();
       try {
         await api.resumeAccount();
         await store.refresh();
@@ -51,6 +54,8 @@
 </script>
 
 <div class="app">
+  <TitleBar />
+  <div class="body">
   <Sidebar />
   <div class="main">
     <div class="page">
@@ -89,10 +94,11 @@
   </div>
 
   {#if store.setupOpen}<Setup />{/if}
+  </div>
 
   <div class="toasts">
     {#each store.toasts as t (t.id)}
-      <div class="toast {t.kind} fade-in">
+      <div class="toast {t.kind}">
         <Icon name={t.kind === "err" ? "alert" : t.kind === "info" ? "spark" : "check"} size={16} />
         <span>{t.text}</span>
       </div>
@@ -105,10 +111,14 @@
     position: relative;
     height: 100%;
     display: flex;
-    background:
-      radial-gradient(900px 500px at 85% -10%, rgba(255, 46, 99, 0.09), transparent 60%),
-      radial-gradient(700px 500px at 10% 110%, rgba(46, 230, 255, 0.05), transparent 60%),
-      var(--bg);
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .body {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
   }
   .main {
     flex: 1;
@@ -123,14 +133,14 @@
     overflow: hidden;
   }
   .status {
-    height: 32px;
+    height: 28px;
     flex: none;
     display: flex;
     align-items: center;
     gap: 4px;
-    padding: 0 10px;
+    padding: 0 8px;
     border-top: 1px solid var(--line);
-    background: rgba(8, 8, 12, 0.95);
+    background: var(--chrome);
     font-size: 12px;
     color: var(--text-2);
   }
@@ -184,10 +194,10 @@
     gap: 10px;
     max-width: 440px;
     padding: 11px 15px;
-    border-radius: 11px;
-    background: rgba(20, 20, 30, 0.96);
+    border-radius: var(--radius);
+    background: var(--surface-3);
     border: 1px solid var(--line-hi);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     font-size: 13px;
     pointer-events: auto;
   }
@@ -195,10 +205,10 @@
     color: var(--good);
   }
   .toast.info :global(svg) {
-    color: var(--cyan);
+    color: var(--info);
   }
   .toast.err {
-    border-color: rgba(255, 77, 109, 0.45);
+    border-color: #5a2a2d;
   }
   .toast.err :global(svg) {
     color: var(--bad);

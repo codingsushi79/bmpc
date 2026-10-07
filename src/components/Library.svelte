@@ -46,18 +46,18 @@
   {/if}
 {/snippet}
 
-<div class="library fade-in">
-  <h1 class="display">Library</h1>
+<div class="library">
+  <h1 class="page-title">Library</h1>
   <div class="cols">
     <section>
       <div class="head">
-        <h2 class="display">Favorites</h2>
+        <h2 class="section-title">Favorites</h2>
         <span class="muted">{favorites.length} saved · {onlineFavs} with drivers now</span>
       </div>
       {@render list(favorites, "Star a server in the browser and it lands here. Favorites also show up in BeamMP's in-game list.", "fav")}
     </section>
     <section>
-      <div class="head"><h2 class="display">Recently played</h2></div>
+      <div class="head"><h2 class="section-title">Recently played</h2></div>
       {@render list(recents, "Servers you join from BeamLink show up here.", "recent")}
     </section>
   </div>
@@ -71,7 +71,6 @@
   }
   h1 {
     margin: 0 0 18px;
-    font-size: 40px;
   }
   .cols {
     display: grid;
@@ -86,7 +85,7 @@
   }
   h2 {
     margin: 0;
-    font-size: 24px;
+    font-size: 15px;
   }
   .list {
     display: flex;
@@ -102,7 +101,7 @@
     transition: border-color 0.15s;
   }
   .item:hover {
-    border-color: rgba(255, 46, 99, 0.4);
+    border-color: #3a3f4a;
   }
   .main {
     flex: 1;

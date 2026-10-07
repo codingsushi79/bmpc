@@ -32,15 +32,15 @@
 
 {#if store.directOpen}
   <div class="scrim" role="presentation" onclick={() => (store.directOpen = false)}></div>
-  <form class="modal panel fade-in" onsubmit={connect}>
-    <h2 class="display">Direct connect</h2>
+  <form class="modal panel" onsubmit={connect}>
+    <h2 class="section-title">Direct connect</h2>
     <p class="muted">For private and LAN servers that aren't on the public list.</p>
     <!-- svelte-ignore a11y_autofocus -->
     <input bind:value={address} placeholder="host:port (default port 30814)" spellcheck="false" autofocus oninput={() => (error = null)} />
     {#if error}<div class="err"><Icon name="alert" size={14} /> {error}</div>{/if}
     <div class="actions">
       <button class="btn btn-primary" disabled={!store.canPlay}><Icon name="play" size={15} /> Connect</button>
-      <button type="button" class="btn btn-ghost" onclick={() => (store.directOpen = false)}>Cancel</button>
+      <button type="button" class="btn btn-secondary" onclick={() => (store.directOpen = false)}>Cancel</button>
     </div>
   </form>
 {/if}
@@ -60,14 +60,14 @@
     width: 440px;
     padding: 24px;
     z-index: 31;
-    background: var(--panel-solid);
+    background: var(--surface);
     display: flex;
     flex-direction: column;
     gap: 12px;
   }
   h2 {
     margin: 0;
-    font-size: 28px;
+    font-size: 15px;
   }
   p {
     margin: 0;
@@ -79,7 +79,7 @@
     display: flex;
     gap: 6px;
     align-items: center;
-    color: #ffb3c1;
+    color: var(--bad);
     font-size: 12.5px;
   }
   .actions {

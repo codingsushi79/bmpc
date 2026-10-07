@@ -39,9 +39,9 @@
   <div class="drawer">
     <div class="bar">
       <Icon name="terminal" size={16} />
-      <span class="eyebrow">BeamMP launcher output</span>
+      <span class="label">BeamMP launcher output</span>
       <label class="follow"><input type="checkbox" bind:checked={follow} /> Follow</label>
-      <button class="btn btn-ghost btn-sm" disabled={!store.view?.launcher_running} onclick={() => store.run(async () => { await api.stopLauncher(); return "BeamMP launcher stopped"; })}>
+      <button class="btn btn-secondary btn-sm" disabled={!store.view?.launcher_running} onclick={() => store.run(async () => { await api.stopLauncher(); return "BeamMP launcher stopped"; })}>
         <Icon name="stop" size={13} /> Stop launcher
       </button>
       <button class="icon-btn" onclick={() => (store.logOpen = false)} aria-label="Close"><Icon name="close" size={16} /></button>
@@ -68,7 +68,7 @@
     padding: 6px 10px 6px 16px;
     border-bottom: 1px solid var(--line);
   }
-  .bar .eyebrow {
+  .bar .label {
     flex: 1;
   }
   .follow {
@@ -87,12 +87,12 @@
     user-select: text;
   }
   .bad {
-    color: #ff8fa3;
+    color: var(--bad);
   }
   .warn {
-    color: #ffd38a;
+    color: var(--warn);
   }
   .note {
-    color: #ff8fab;
+    color: var(--text-2);
   }
 </style>

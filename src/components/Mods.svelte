@@ -47,27 +47,27 @@
   const activeSize = $derived(own.filter((m) => m.active !== false).reduce((n, m) => n + m.bytes, 0));
 </script>
 
-<div class="mods fade-in">
+<div class="mods">
   <header>
-    <h1 class="display">Mods</h1>
+    <h1 class="page-title">Mods</h1>
     <div class="actions">
-      <button class="btn btn-ghost btn-sm" onclick={() => api.openFolder("mods").catch((e) => store.toast(String(e), "err"))}><Icon name="folder" size={15} /> Open mods folder</button>
+      <button class="btn btn-secondary btn-sm" onclick={() => api.openFolder("mods").catch((e) => store.toast(String(e), "err"))}><Icon name="folder" size={15} /> Open mods folder</button>
       <button class="icon-btn" onclick={load} title="Rescan"><Icon name="refresh" /></button>
     </div>
   </header>
 
   <div class="top">
     <div class="panel tile">
-      <div class="eyebrow">Your mods</div>
-      <div class="big display">{own.length}</div>
+      <div class="label">Your mods</div>
+      <div class="big">{own.length}</div>
       <div class="muted">{bytes(activeSize)} enabled</div>
     </div>
     <div class="panel tile">
-      <div class="eyebrow">Server mod cache</div>
-      <div class="big display">{bytes(report?.cache_bytes ?? 0)}</div>
+      <div class="label">Server mod cache</div>
+      <div class="big">{bytes(report?.cache_bytes ?? 0)}</div>
       <div class="muted">{report?.cache_files ?? 0} files from servers you've joined</div>
       <div class="tile-actions">
-        <button class="btn btn-ghost btn-sm" onclick={() => api.openFolder("cache").catch((e) => store.toast(String(e), "err"))}>Open</button>
+        <button class="btn btn-secondary btn-sm" onclick={() => api.openFolder("cache").catch((e) => store.toast(String(e), "err"))}>Open</button>
         <button class="btn btn-danger btn-sm" disabled={busy || !report?.cache_bytes} onclick={clear}><Icon name="trash" size={14} /> Clear cache</button>
       </div>
     </div>
@@ -80,7 +80,7 @@
   </div>
 
   <section>
-    <div class="eyebrow">Installed in BeamNG.drive</div>
+    <div class="label">Installed in BeamNG.drive</div>
     {#if !report}
       <div class="muted">Scanning…</div>
     {:else if !report.mods_dir}
@@ -108,7 +108,7 @@
   </section>
 
   <section>
-    <div class="eyebrow">Managed by BeamLink</div>
+    <div class="label">Managed by BeamLink</div>
     <div class="list panel">
       {#each managed as m (m.location + m.file)}
         <div class="row">
@@ -118,7 +118,7 @@
             <div class="muted sub">{m.name === "beamlink" ? "BeamLink companion — one-click join" : "BeamMP client mod — multiplayer"}</div>
           </div>
           <div class="size">{bytes(m.bytes)}</div>
-          <span class="badge official">{m.active === false ? "Off — fixed on next launch" : "Active"}</span>
+          <span class="tag official">{m.active === false ? "Off — fixed on next launch" : "Active"}</span>
         </div>
       {:else}
         <div class="row muted">Not installed yet — run setup from Settings.</div>
@@ -141,8 +141,6 @@
   }
   h1 {
     margin: 0;
-    font-size: 40px;
-    line-height: 1;
   }
   .actions {
     display: flex;
@@ -158,9 +156,10 @@
     padding: 16px 18px;
   }
   .big {
-    font-size: 40px;
-    line-height: 1.1;
-    margin: 4px 0;
+    font-size: 24px;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    margin: 6px 0 2px;
   }
   .tile-actions {
     display: flex;
@@ -185,7 +184,7 @@
   section {
     margin-bottom: 24px;
   }
-  section > .eyebrow {
+  section > .label {
     margin-bottom: 10px;
   }
   .list {
@@ -257,7 +256,7 @@
     transition: transform 0.2s;
   }
   .switch input:checked + span {
-    background: var(--grad);
+    background: var(--accent);
   }
   .switch input:checked + span::after {
     transform: translateX(18px);

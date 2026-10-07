@@ -2,7 +2,7 @@
   import BeamText from "./BeamText.svelte";
   import Icon from "./Icon.svelte";
   import { store } from "../lib/store.svelte";
-  import { bytes, flag, mapHue, mapName, serverKey } from "../lib/beam";
+  import { bytes, mapName, serverKey } from "../lib/beam";
 
   const s = $derived(store.selected);
   const key = $derived(s ? serverKey(s) : "");
@@ -38,93 +38,87 @@
 {#if s}
   <div class="scrim" role="presentation" onclick={() => (store.selected = null)}></div>
   <aside class="drawer">
-    <div class="banner" style:--h={mapHue(s.map)}>
-      <button class="icon-btn close" onclick={() => (store.selected = null)} aria-label="Close"><Icon name="close" /></button>
-      <div class="badges">
-        {#if s.partner}<span class="badge partner">Partner</span>{/if}
-        {#if s.featured}<span class="badge featured">Featured</span>{/if}
-        {#if s.official}<span class="badge official">Official</span>{/if}
-        {#if s.password}<span class="badge"><Icon name="lock" size={11} /> Password</span>{/if}
-        {#if !s.guests}<span class="badge">Accounts only</span>{/if}
+    <header>
+      <div class="crumbs">
+        <span>{mapName(s.map)}</span>
+        <span class="region">{s.location || "--"}</span>
+        {#if s.official}<span class="tag official">Official</span>{/if}
+        {#if s.featured}<span class="tag featured">Featured</span>{/if}
+        {#if s.partner}<span class="tag partner">Partner</span>{/if}
       </div>
-      <div class="map display">{mapName(s.map)}</div>
-    </div>
+      <button class="icon-btn" onclick={() => (store.selected = null)} aria-label="Close"><Icon name="close" size={16} /></button>
+    </header>
 
     <div class="content">
       <h2><BeamText text={s.name} /></h2>
-      <div class="owner muted">hosted by {s.owner || "unknown"} · {flag(s.location)} {s.location || "—"}</div>
+      <div class="owner">Hosted by {s.owner || "unknown"}</div>
+      {#if s.password || !s.guests}
+        <div class="notes">
+          {#if s.password}<span><Icon name="lock" size={12} /> Password required</span>{/if}
+          {#if !s.guests}<span>BeamMP account required (no guests)</span>{/if}
+        </div>
+      {/if}
 
       <div class="actions">
-        <button class="btn btn-primary join" disabled={!store.canPlay} onclick={() => store.join(s)}>
-          <Icon name="play" size={18} /> Join server
+        <button class="btn btn-primary btn-lg join" disabled={!store.canPlay} onclick={() => store.join(s)}>
+          <Icon name="play" size={15} /> Join server
         </button>
-        <button class="btn btn-ghost" class:faved={fav} onclick={() => store.toggleFavorite(s)} title="Favorite">
-          <Icon name={fav ? "star-fill" : "star"} size={17} />
+        <button class="btn btn-secondary btn-lg square" class:faved={fav} onclick={() => store.toggleFavorite(s)} title={fav ? "Remove from favorites" : "Add to favorites"}>
+          <Icon name={fav ? "star-fill" : "star"} size={16} />
         </button>
-        <button class="btn btn-ghost" onclick={copy} title="Copy address"><Icon name="copy" size={17} /></button>
+        <button class="btn btn-secondary btn-lg square" onclick={copy} title="Copy address"><Icon name="copy" size={16} /></button>
       </div>
 
-      <div class="facts">
-        <div class="fact">
-          <div class="eyebrow">Players</div>
-          <div class="v"><b>{s.players}</b><span class="muted"> / {s.max_players}</span></div>
+      <dl class="facts">
+        <div><dt>Players</dt><dd>{s.players} <span class="muted">/ {s.max_players}</span></dd></div>
+        <div>
+          <dt>Ping</dt>
+          <dd>{#if ping == null || ping < 0}<span class="muted">{ping === null ? "n/a" : "…"}</span>{:else}{ping} ms{/if}</dd>
         </div>
-        <div class="fact">
-          <div class="eyebrow">Ping</div>
-          <div class="v">
-            {#if ping == null || ping < 0}<span class="muted">{ping === null ? "n/a" : "…"}</span>{:else}{ping} ms{/if}
-          </div>
-        </div>
-        <div class="fact">
-          <div class="eyebrow">Mods</div>
-          <div class="v" class:warn={s.mods_size > 500 * 1024 * 1024}>{s.mods.length ? bytes(s.mods_size) : "None"}</div>
-        </div>
-        <div class="fact">
-          <div class="eyebrow">Version</div>
-          <div class="v">{s.version || "?"}</div>
-        </div>
-      </div>
+        <div><dt>Mods</dt><dd class:warn={s.mods_size > 500 * 1024 * 1024}>{s.mods.length ? bytes(s.mods_size) : "None"}</dd></div>
+        <div><dt>Version</dt><dd>{s.version || "?"}</dd></div>
+      </dl>
 
       {#if s.description}
         <section>
-          <div class="eyebrow">About</div>
+          <h3 class="label">About</h3>
           <p class="desc"><BeamText text={s.description} multiline /></p>
         </section>
       {/if}
 
       {#if s.tags.length}
         <section>
-          <div class="eyebrow">Tags</div>
-          <div class="tags">{#each s.tags as t}<span class="chip">{t}</span>{/each}</div>
+          <h3 class="label">Tags</h3>
+          <div class="list-inline">{#each s.tags as t}<span class="tag">{t}</span>{/each}</div>
         </section>
       {/if}
 
       <section>
-        <div class="eyebrow">Online now ({s.player_names.length})</div>
+        <h3 class="label">Online now · {s.player_names.length}</h3>
         {#if s.player_names.length}
-          <div class="people">{#each s.player_names as p}<span class="person" class:guest={p.startsWith("guest")}>{p}</span>{/each}</div>
+          <div class="list-inline">{#each s.player_names as p}<span class="person" class:guest={p.startsWith("guest")}>{p}</span>{/each}</div>
         {:else}
-          <div class="muted">Nobody yet — be the first.</div>
+          <p class="muted">Nobody yet.</p>
         {/if}
       </section>
 
       {#if s.mods.length}
         <section>
-          <div class="eyebrow">Mods you'll download ({s.mods.length})</div>
+          <h3 class="label">Mods to download · {s.mods.length}</h3>
           {#if s.mods_size > 500 * 1024 * 1024}
-            <div class="warnbox"><Icon name="alert" size={15} /> {bytes(s.mods_size)} to download on first join. BeamMP asks before it downloads.</div>
+            <p class="warnline">{bytes(s.mods_size)} downloads on your first join. BeamMP asks before downloading.</p>
           {/if}
           <ul class="mods mono">
             {#each showAllMods ? s.mods : s.mods.slice(0, 8) as m}<li>{m}</li>{/each}
           </ul>
           {#if s.mods.length > 8 && !showAllMods}
-            <button class="btn btn-ghost btn-sm" onclick={() => (showAllMods = true)}>Show all {s.mods.length}</button>
+            <button class="btn btn-quiet btn-sm" onclick={() => (showAllMods = true)}>Show all {s.mods.length}</button>
           {/if}
         </section>
       {/if}
 
       <section>
-        <div class="eyebrow">Address</div>
+        <h3 class="label">Address</h3>
         <div class="mono addr">{s.ip}:{s.port}</div>
       </section>
     </div>
@@ -135,103 +129,85 @@
   .scrim {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 20;
-    animation: fade 0.2s ease both;
-  }
-  @keyframes fade {
-    from {
-      opacity: 0;
-    }
   }
   .drawer {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
-    width: 440px;
+    width: 420px;
     max-width: 92%;
     z-index: 21;
-    background: var(--panel-solid);
+    background: var(--surface);
     border-left: 1px solid var(--line-hi);
-    box-shadow: -30px 0 60px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    animation: slide 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: slide 0.16s ease-out both;
   }
   @keyframes slide {
     from {
-      transform: translateX(40px);
+      transform: translateX(16px);
       opacity: 0;
     }
   }
-  .banner {
-    position: relative;
-    height: 150px;
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+    padding: 0 10px 0 20px;
+    border-bottom: 1px solid var(--line);
     flex: none;
-    padding: 16px 20px;
+  }
+  .crumbs {
     display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    background:
-      radial-gradient(120% 140% at 100% 0%, hsla(var(--h), 90%, 55%, 0.6), transparent 60%),
-      linear-gradient(120deg, hsla(var(--h), 60%, 18%, 1), hsla(calc(var(--h) + 40), 70%, 9%, 1));
-  }
-  .banner::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(0deg, var(--panel-solid), transparent 70%),
-      repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 14px);
-  }
-  .close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 2;
-    background: rgba(0, 0, 0, 0.35);
-  }
-  .badges {
-    position: absolute;
-    top: 16px;
-    left: 20px;
-    display: flex;
-    gap: 6px;
-    z-index: 2;
-  }
-  .map {
-    position: relative;
-    z-index: 2;
-    font-size: 34px;
-    line-height: 1;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-2);
   }
   .content {
     flex: 1;
     overflow-y: auto;
-    padding: 6px 22px 26px;
+    padding: 18px 20px 28px;
   }
   h2 {
-    margin: 4px 0 4px;
-    font-size: 20px;
-    line-height: 1.25;
+    margin: 0 0 4px;
+    font-size: 18px;
+    line-height: 1.3;
+    font-weight: 650;
     user-select: text;
   }
   .owner {
     font-size: 12.5px;
+    color: var(--muted);
+  }
+  .notes {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 8px;
+    font-size: 12.5px;
+    color: var(--warn);
+  }
+  .notes span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
   .actions {
     display: flex;
-    gap: 8px;
-    margin: 16px 0 18px;
+    gap: 6px;
+    margin: 16px 0;
   }
   .join {
     flex: 1;
-    height: 46px;
-    font-size: 18px;
   }
-  .actions .btn-ghost {
-    height: 46px;
-    width: 46px;
+  .square {
+    width: 42px;
     padding: 0;
   }
   .faved {
@@ -240,84 +216,71 @@
   .facts {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-  .fact {
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.03);
+    margin: 0;
     border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
   }
-  .fact .eyebrow {
-    font-size: 10.5px;
+  .facts div {
+    padding: 10px 12px;
+    border-right: 1px solid var(--line);
   }
-  .v {
-    font-weight: 700;
-    margin-top: 4px;
-    font-size: 15px;
+  .facts div:last-child {
+    border-right: none;
   }
-  .v b {
-    color: var(--good);
+  dt {
+    font-size: 11.5px;
+    color: var(--muted);
   }
-  .warn {
+  dd {
+    margin: 3px 0 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  dd.warn {
     color: var(--warn);
   }
   section {
-    margin-top: 18px;
+    margin-top: 20px;
   }
-  section > .eyebrow {
-    margin-bottom: 8px;
+  h3 {
+    margin: 0 0 8px;
+  }
+  p {
+    margin: 0;
   }
   .desc {
-    margin: 0;
     line-height: 1.55;
     color: var(--text-2);
     user-select: text;
   }
-  .tags {
+  .list-inline {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-  }
-  .people {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
   }
   .person {
-    padding: 4px 9px;
-    border-radius: 7px;
-    background: rgba(61, 220, 132, 0.1);
-    color: #a6f4c5;
-    font-size: 12.5px;
-    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--surface-3);
+    font-size: 12px;
     user-select: text;
   }
   .person.guest {
-    background: rgba(255, 255, 255, 0.05);
     color: var(--muted);
   }
-  .warnbox {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    padding: 9px 12px;
-    border-radius: 9px;
-    background: rgba(255, 176, 32, 0.08);
-    border: 1px solid rgba(255, 176, 32, 0.25);
-    color: #ffd38a;
+  .warnline {
     font-size: 12.5px;
+    color: var(--warn);
     margin-bottom: 8px;
   }
   .mods {
-    margin: 0 0 10px;
+    margin: 0 0 8px;
     padding: 0;
     list-style: none;
     color: var(--text-2);
   }
   .mods li {
-    padding: 4px 0;
+    padding: 5px 0;
     border-bottom: 1px solid var(--line);
     overflow: hidden;
     text-overflow: ellipsis;
