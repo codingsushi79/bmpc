@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The main window: core APIs and events only. Folders and links are opened by Rust commands that check what they open.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}
