@@ -1,6 +1,6 @@
 [package]
 name = "beamlink"
-version = "0.2.0"
+version = "0.3.0"
 description = "BeamLink — a BeamMP launcher with a server browser, built on the official BeamMP-Launcher"
 edition = "2024"
 license = "MIT"

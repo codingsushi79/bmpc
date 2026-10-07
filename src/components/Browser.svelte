@@ -128,7 +128,7 @@
       <span class="muted">{filtered.length.toLocaleString()} servers · {shownPlayers.toLocaleString()} drivers</span>
     </div>
     <div class="actions">
-      <button class="btn btn-secondary btn-sm" onclick={() => (store.directOpen = true)}><Icon name="link" size={15} /> Direct connect</button>
+      <button class="btn btn-secondary btn-sm" onclick={() => (store.page = "direct")}><Icon name="link" size={15} /> Direct connect</button>
       <button class="btn btn-secondary btn-sm" onclick={pingVisible} title="Measure ping to the servers on screen"><Icon name="signal" size={15} /> Ping</button>
       <button class="icon-btn" onclick={() => store.loadServers(true)} title="Refresh list">
         <span class:spin={store.loadingServers}><Icon name="refresh" size={18} /></span>

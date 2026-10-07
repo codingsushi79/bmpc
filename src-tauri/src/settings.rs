@@ -40,6 +40,8 @@ pub struct Settings {
     pub sync_favorites: bool,
     pub favorites: Vec<SavedServer>,
     pub recents: Vec<SavedServer>,
+    /// Servers added by address: private, LAN, or just not listed.
+    pub direct: Vec<SavedServer>,
     /// The first-run setup finished at least once.
     pub setup_done: bool,
     /// Accent colour name for the UI.
@@ -58,6 +60,7 @@ impl Default for Settings {
             sync_favorites: true,
             favorites: Vec::new(),
             recents: Vec::new(),
+            direct: Vec::new(),
             setup_done: false,
             accent: "hesi".into(),
         }
@@ -112,6 +115,24 @@ impl Settings {
         }
     }
 
+    /// Add a direct server, or rename it if the address is already saved.
+    pub fn save_direct(&mut self, server: SavedServer) {
+        let key = server.key();
+        match self.direct.iter_mut().find(|d| d.key() == key) {
+            Some(existing) => existing.name = server.name,
+            None => self.direct.push(SavedServer {
+                at: now_ms(),
+                ..server
+            }),
+        }
+    }
+
+    pub fn remove_direct(&mut self, key: &str) -> bool {
+        let before = self.direct.len();
+        self.direct.retain(|d| d.key() != key);
+        self.direct.len() != before
+    }
+
     /// Most recent first, de-duplicated, capped at 20.
     pub fn push_recent(&mut self, server: SavedServer) {
         let key = server.key();
@@ -155,6 +176,20 @@ mod tests {
         assert_eq!(s.favorites.len(), 1);
         assert!(!s.toggle_favorite(server(1)));
         assert!(s.favorites.is_empty());
+    }
+
+    #[test]
+    fn direct_servers_save_rename_and_remove() {
+        let mut s = Settings::default();
+        s.save_direct(server(1));
+        s.save_direct(SavedServer {
+            name: "renamed".into(),
+            ..server(1)
+        });
+        assert_eq!(s.direct.len(), 1);
+        assert_eq!(s.direct[0].name, "renamed");
+        assert!(s.remove_direct("1.2.3.4:1"));
+        assert!(!s.remove_direct("1.2.3.4:1"));
     }
 
     #[test]

@@ -1,71 +1,76 @@
 <script lang="ts">
-  import HeroArt from "./HeroArt.svelte";
-  import Icon from "./Icon.svelte";
-  import ServerCard from "./ServerCard.svelte";
   import BeamText from "./BeamText.svelte";
+  import Icon from "./Icon.svelte";
+  import ServerRow from "./ServerRow.svelte";
   import { store } from "../lib/store.svelte";
-  import { ago, mapName, serverKey } from "../lib/beam";
+  import { ago, parseAddress, serverKey } from "../lib/beam";
   import type { Server } from "../lib/types";
 
-  const featured = $derived(
-    store.servers.filter((s) => (s.featured || s.partner || s.official) && s.players > 0).slice(0, 6),
-  );
-  const popular = $derived(
-    store.servers.filter((s) => !s.featured && !s.partner && !s.official && !s.password).slice(0, 6),
-  );
+  let quick = $state("");
+  let quickError = $state<string | null>(null);
+
   const byKey = $derived(new Map(store.servers.map((s) => [serverKey(s), s] as [string, Server])));
-  const recents = $derived((store.view?.settings.recents ?? []).slice(0, 4));
-  const running = $derived(store.view?.launcher_running ?? false);
-  const account = $derived(store.view?.account);
+  const recents = $derived((store.view?.settings.recents ?? []).slice(0, 5));
+  const favorites = $derived(store.view?.settings.favorites ?? []);
+  const popular = $derived(store.servers.filter((s) => !s.password).slice(0, 8));
+  const view = $derived(store.view);
+
+  const status = $derived.by(() => {
+    if (!view) return "";
+    if (store.inSession) return "playing";
+    if (view.game?.launcher) return "menu";
+    if (view.launcher_running) return "starting";
+    return "idle";
+  });
+
+  async function quickJoin(e: SubmitEvent) {
+    e.preventDefault();
+    const target = parseAddress(quick);
+    if (!target) {
+      quickError = "Enter an address like 192.168.1.20 or host:30814";
+      return;
+    }
+    await store.join({ ...target, name: `${target.ip}:${target.port}`, map: "", at: 0 });
+  }
 </script>
 
 <div class="home">
-  <section class="hero">
-    <HeroArt />
-    <div class="shade"></div>
-    <div class="hero-body">
-      <div class="label">BeamNG.drive multiplayer</div>
-      <h1>{store.inSession ? "You're on a server" : "Ready to drive"}</h1>
-      {#if store.inSession}
-        <p class="sub"><BeamText text={store.inSession.name ?? "Unknown server"} /></p>
-      {:else}
-        <p class="sub">Pick a server and join in one click, or launch BeamMP and browse in game.</p>
-      {/if}
-      <div class="cta">
-        <button class="btn btn-primary btn-lg" disabled={!store.canPlay} onclick={() => store.play()}>
-          <Icon name="play" size={16} />
-          {running ? "BeamMP is running" : "Play"}
-        </button>
-        <button class="btn btn-secondary btn-lg" onclick={() => (store.page = "servers")}>Browse servers</button>
+  <div class="main">
+    <section class="panel status">
+      <div class="s-text">
+        <div class="label">BeamMP</div>
+        {#if status === "playing"}
+          <div class="s-line">Playing on <BeamText text={store.inSession?.name ?? "a server"} /></div>
+        {:else if status === "menu"}
+          <div class="s-line">In the game menu. Pick a server here and it joins automatically.</div>
+        {:else if status === "starting"}
+          <div class="s-line">Starting BeamNG.drive…</div>
+        {:else if !store.canPlay}
+          <div class="s-line">BeamNG.drive doesn't run on {view?.platform === "macos" ? "macOS" : "this system"}. You can browse and save servers here.</div>
+        {:else if view && !view.ready}
+          <div class="s-line">Setup isn't finished. <button class="link" onclick={() => (store.setupOpen = true)}>Finish setup</button></div>
+        {:else}
+          <div class="s-line">Not running</div>
+        {/if}
       </div>
-      <dl class="stats">
-        <div><dt>Drivers online</dt><dd>{store.totals.players.toLocaleString()}</dd></div>
-        <div><dt>Servers</dt><dd>{store.totals.servers.toLocaleString()}</dd></div>
-        <div><dt>Account</dt><dd>{account?.signed_in ? account.username : "Guest"}</dd></div>
-      </dl>
-      {#if !store.canPlay}
-        <p class="notice">
-          BeamNG.drive doesn't run on {store.view?.platform === "macos" ? "macOS" : "this system"}. You can browse and save
-          servers here, then play from a Windows or Linux PC.
-        </p>
-      {/if}
-    </div>
-  </section>
+      <form class="quick" onsubmit={quickJoin}>
+        <input bind:value={quick} placeholder="Connect to address" spellcheck="false" oninput={() => (quickError = null)} />
+        <button class="btn btn-secondary" disabled={!quick.trim() || !store.canPlay}>Connect</button>
+      </form>
+      {#if quickError}<p class="q-error">{quickError}</p>{/if}
+    </section>
 
-  <div class="content">
     {#if recents.length}
       <section>
-        <div class="head"><h2 class="section-title">Jump back in</h2></div>
-        <div class="recents">
-          {#each recents as r}
-            {@const live = byKey.get(serverKey(r))}
-            <button class="recent" onclick={() => store.join(r)} disabled={!store.canPlay}>
-              <div class="r-main">
-                <div class="r-name"><BeamText text={r.name} /></div>
-                <div class="r-sub">{mapName(r.map)} · {ago(r.at)}</div>
-              </div>
-              <span class="r-players" class:off={!live}>{live ? `${live.players}/${live.max_players}` : "Offline"}</span>
-            </button>
+        <h2 class="section-title">Recent</h2>
+        <div class="panel">
+          {#each recents as r (serverKey(r))}
+            {@const live = byKey.get(serverKey(r)) ?? null}
+            <ServerRow name={r.name} server={live} detail={ago(r.at)} onopen={live ? () => (store.selected = live) : undefined}>
+              {#snippet actions()}
+                <button class="btn btn-secondary btn-sm" disabled={!store.canPlay} onclick={(e) => { e.stopPropagation(); store.join(live ?? r); }}>Join</button>
+              {/snippet}
+            </ServerRow>
           {/each}
         </div>
       </section>
@@ -73,164 +78,172 @@
 
     <section>
       <div class="head">
-        <h2 class="section-title">Featured</h2>
-        <span class="muted">Official, featured and partner servers with players</span>
-        <button class="btn btn-quiet btn-sm more" onclick={() => (store.page = "servers")}>View all <Icon name="chevron" size={13} /></button>
+        <h2 class="section-title">Popular right now</h2>
+        <button class="btn btn-quiet btn-sm" onclick={() => (store.page = "servers")}>All servers <Icon name="chevron" size={12} /></button>
       </div>
-      {#if store.loadingServers && !store.servers.length}
-        <div class="grid">{#each Array(3) as _}<div class="placeholder"></div>{/each}</div>
-      {:else if featured.length}
-        <div class="grid">{#each featured as s (serverKey(s))}<ServerCard server={s} />{/each}</div>
-      {:else}
-        <p class="muted">{store.serversError ?? "Nothing featured right now."}</p>
-      {/if}
-    </section>
-
-    <section>
-      <div class="head"><h2 class="section-title">Most popular</h2><span class="muted">Community servers by player count</span></div>
-      <div class="grid">{#each popular as s (serverKey(s))}<ServerCard server={s} />{/each}</div>
+      <div class="panel">
+        {#if !popular.length}
+          <p class="empty muted">{store.loadingServers ? "Loading servers…" : (store.serversError ?? "No servers to show.")}</p>
+        {/if}
+        {#each popular as s (serverKey(s))}
+          <ServerRow name={s.name} server={s} detail={s.official ? "Official" : s.tags.slice(0, 2).join(", ")} ping={store.pings[serverKey(s)]} onopen={() => (store.selected = s)}>
+            {#snippet actions()}
+              <button class="btn btn-secondary btn-sm" disabled={!store.canPlay} onclick={(e) => { e.stopPropagation(); store.join(s); }}>Join</button>
+            {/snippet}
+          </ServerRow>
+        {/each}
+      </div>
     </section>
   </div>
+
+  <aside class="side">
+    <section class="panel box">
+      <div class="label">Online now</div>
+      <div class="kv"><span>Players</span><b>{store.totals.players.toLocaleString()}</b></div>
+      <div class="kv"><span>Servers</span><b>{store.totals.servers.toLocaleString()}</b></div>
+    </section>
+
+    <section class="panel box">
+      <div class="label">Favorites</div>
+      {#if favorites.length}
+        <ul class="favs">
+          {#each favorites.slice(0, 8) as f (serverKey(f))}
+            {@const live = byKey.get(serverKey(f))}
+            <li>
+              <button onclick={() => live && (store.selected = live)} disabled={!live}>
+                <span class="f-name"><BeamText text={live?.name ?? f.name} /></span>
+                <span class="f-count">{live ? `${live.players}/${live.max_players}` : "Offline"}</span>
+              </button>
+            </li>
+          {/each}
+        </ul>
+        {#if favorites.length > 8}<button class="btn btn-quiet btn-sm" onclick={() => (store.page = "library")}>All {favorites.length}</button>{/if}
+      {:else}
+        <p class="muted small">Star servers in the browser to keep them here.</p>
+      {/if}
+    </section>
+  </aside>
 </div>
 
 <style>
   .home {
     height: 100%;
     overflow-y: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 20px;
+    padding: 24px 28px 40px;
+    align-content: start;
   }
-  .hero {
-    position: relative;
-    height: 320px;
-    overflow: hidden;
-    border-bottom: 1px solid var(--line);
+  .main {
+    min-width: 0;
   }
-  .shade {
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(90deg, var(--bg) 0%, rgba(11, 12, 15, 0.85) 38%, rgba(11, 12, 15, 0.2) 75%),
-      linear-gradient(0deg, var(--bg) 0%, transparent 35%);
+  section + section {
+    margin-top: 24px;
   }
-  .hero-body {
-    position: relative;
-    padding: 44px 40px 0;
-    max-width: 640px;
+  .status {
+    padding: 16px;
   }
-  h1 {
-    margin: 8px 0 6px;
-    font-family: var(--display);
-    font-weight: 700;
-    font-size: 44px;
-    line-height: 1;
-    letter-spacing: 0.01em;
-    text-transform: uppercase;
+  .s-line {
+    margin-top: 4px;
+    font-size: 14px;
   }
-  .sub {
-    margin: 0 0 22px;
-    font-size: 14.5px;
-    color: var(--text-2);
+  .link {
+    color: var(--accent);
+    font-weight: 550;
   }
-  .cta {
+  .link:hover {
+    text-decoration: underline;
+  }
+  .quick {
     display: flex;
     gap: 8px;
+    margin-top: 14px;
   }
-  .stats {
-    display: flex;
-    margin: 26px 0 0;
+  .quick input {
+    flex: 1;
   }
-  .stats div {
-    padding-right: 22px;
-    margin-right: 22px;
-    border-right: 1px solid var(--line-hi);
-  }
-  .stats div:last-child {
-    border-right: none;
-  }
-  dt {
-    font-size: 11.5px;
-    color: var(--muted);
-  }
-  dd {
-    margin: 2px 0 0;
-    font-size: 17px;
-    font-weight: 650;
-    font-variant-numeric: tabular-nums;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .notice {
-    margin: 18px 0 0;
+  .q-error {
+    margin: 8px 0 0;
     font-size: 12.5px;
-    color: var(--warn);
+    color: var(--bad);
   }
-  .content {
-    padding: 8px 40px 40px;
-  }
-  section {
-    margin-top: 26px;
+  h2 {
+    margin-bottom: 10px;
   }
   .head {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-  .more {
-    margin-left: auto;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 10px;
-  }
-  .placeholder {
-    height: 136px;
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    border: 1px solid var(--line);
-  }
-  .recents {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 10px;
-  }
-  .recent {
-    display: flex;
     align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .head h2 {
+    margin: 0;
+  }
+  .empty {
+    margin: 0;
+    padding: 16px;
+  }
+  .side {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
-    padding: 12px 14px;
-    text-align: left;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    transition: border-color 0.12s;
   }
-  .recent:hover:not(:disabled) {
-    border-color: #3a3f4a;
+  .side section + section {
+    margin-top: 0;
   }
-  .r-main {
-    flex: 1;
-    min-width: 0;
+  .box {
+    padding: 14px;
   }
-  .r-name {
+  .box .label {
+    margin-bottom: 8px;
+  }
+  .kv {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    color: var(--text-2);
+  }
+  .kv b {
+    color: var(--text);
     font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .favs {
+    list-style: none;
+    margin: 0 -6px;
+    padding: 0;
+  }
+  .favs button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px;
+    border-radius: var(--radius);
+    text-align: left;
+  }
+  .favs button:hover:not(:disabled) {
+    background: var(--surface-3);
+  }
+  .favs button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .f-name {
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .r-sub {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-  .r-players {
+  .f-count {
+    flex: none;
     font-size: 12.5px;
-    font-weight: 600;
+    color: var(--text-2);
     font-variant-numeric: tabular-nums;
   }
-  .r-players.off {
-    color: var(--muted);
+  .small {
+    margin: 0;
+    font-size: 12.5px;
   }
 </style>

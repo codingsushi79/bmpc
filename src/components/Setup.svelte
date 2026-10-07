@@ -1,6 +1,5 @@
 <script lang="ts">
   import Icon from "./Icon.svelte";
-  import HeroArt from "./HeroArt.svelte";
   import { api, onSetupProgress } from "../lib/api";
   import { store } from "../lib/store.svelte";
   import { bytes } from "../lib/beam";
@@ -54,7 +53,6 @@
 </script>
 
 <div class="setup">
-  <HeroArt />
   <div class="shade"></div>
   <div class="card panel">
     <div class="label">Setup</div>
@@ -100,7 +98,7 @@
 
     <div class="actions">
       {#if finished === "ok"}
-        <button class="btn btn-primary" onclick={close}><Icon name="play" size={16} /> Let's drive</button>
+        <button class="btn btn-primary" onclick={close}>Done</button>
       {:else}
         <button class="btn btn-primary" disabled={running || !store.canPlay} onclick={start}>
           {running ? "Installing…" : finished === "err" ? "Try again" : "Install"}

@@ -154,3 +154,22 @@ export function ago(ms: number): string {
   if (s < 86400) return `${Math.floor(s / 3600)} h ago`;
   return `${Math.floor(s / 86400)} d ago`;
 }
+
+/** Same rules as the Rust side: host, host:port, [v6], [v6]:port. */
+export function parseAddress(input: string): { ip: string; port: number } | null {
+  let t = input.trim().replace(/\/+$/, "").replace(/^beammp:\/\//, "");
+  if (!t) return null;
+  let host = t;
+  let port = 30814;
+  const v6 = t.match(/^\[([^\]]+)\](?::(\d+))?$/);
+  if (v6) {
+    host = v6[1];
+    if (v6[2]) port = Number(v6[2]);
+  } else if ((t.match(/:/g) ?? []).length === 1) {
+    const [h, p] = t.split(":");
+    host = h;
+    port = Number(p);
+  }
+  if (!host || !/^[A-Za-z0-9.\-_:]+$/.test(host) || !Number.isInteger(port) || port < 1 || port > 65535) return null;
+  return { ip: host, port };
+}

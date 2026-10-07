@@ -4,6 +4,7 @@
 
 import type {
   Account,
+  DirectInfo,
   LogLine,
   ModsReport,
   Ping,
@@ -31,6 +32,9 @@ export const api = {
   removeMods: () => call<string[]>("remove_mods"),
   servers: (force = false) => call<Server[]>("fetch_servers", { force }),
   ping: (targets: string[]) => call<Ping[]>("ping", { targets }),
+  queryServer: (address: string) => call<DirectInfo>("query_server", { address }),
+  saveDirect: (address: string, name: string) => call<SavedServer>("save_direct", { address, name }),
+  removeDirect: (key: string) => call<void>("remove_direct", { key }),
   play: () => call<string>("play"),
   join: (server: SavedServer) => call<string>("join", { server }),
   cancelJoin: () => call<void>("cancel_join"),
@@ -74,6 +78,10 @@ const mockSettings: Settings = {
   sync_favorites: true,
   favorites: [],
   recents: [],
+  direct: [
+    { ip: "192.168.1.20", port: 30814, name: "Home server", map: "", at: Date.now() - 86400000 },
+    { ip: "play.example.net", port: 30900, name: "Friends' drift night", map: "", at: Date.now() - 3 * 86400000 },
+  ],
   setup_done: false,
   accent: "hesi",
 };
@@ -217,6 +225,41 @@ async function mock(cmd: string, args?: Record<string, unknown>): Promise<unknow
       else favs.unshift({ ...s, at: Date.now() });
       return idx < 0;
     }
+    case "query_server": {
+      const address = String(args!.address).trim();
+      if (!address) throw "enter an address, like 192.168.1.20 or play.example.com:30814";
+      await sleep(250);
+      if (address.includes("example.net")) throw `no BeamMP server answered at ${address} (TimedOut). Is it running, and is the port open?`;
+      const [ip, port] = address.split(":");
+      return {
+        server: {
+          ...mockServers[7],
+          ip,
+          port: Number(port || 30814),
+          name: "^4Home ^fserver",
+          description: "Private server for the crew",
+          players: 2,
+          max_players: 8,
+          player_names: ["you", "friend"],
+          location: "",
+          official: false,
+          featured: false,
+          partner: false,
+        },
+        ping_ms: 3,
+        details: true,
+      } satisfies DirectInfo;
+    }
+    case "save_direct": {
+      const address = String(args!.address);
+      const [ip, port] = address.split(":");
+      const saved = { ip, port: Number(port || 30814), name: String(args!.name) || address, map: "", at: Date.now() };
+      mockView.settings.direct = [...mockView.settings.direct.filter((d) => d.ip !== saved.ip || d.port !== saved.port), saved];
+      return saved;
+    }
+    case "remove_direct":
+      mockView.settings.direct = mockView.settings.direct.filter((d) => `${d.ip}:${d.port}` !== args!.key);
+      return null;
     case "stop_launcher":
       mockView.launcher_running = false;
       return null;

@@ -74,8 +74,8 @@ CI signs the build with the `TAURI_SIGNING_PRIVATE_KEY` repository secret.
   they're on. Filters: has players, not full, no mods, official, featured and
   partner, favorites, locked servers, map, region. Sorting: players, name,
   map, mod size and ping.
-- **Ping on demand.** Times a TCP connect to each server's game port, only
-  for the rows on screen or the server you open, at most 32 at a time.
+- **Ping on demand.** Uses BeamMP's own `P` ping on each server's game port,
+  only for the rows on screen or the server you open, at most 32 at a time.
 - **Server details:** description with BeamMP `^` colour codes rendered,
   who's online, tags, every mod with its total download size (big packs are
   flagged), version, region and address.
@@ -86,7 +86,12 @@ CI signs the build with the `TAURI_SIGNING_PRIVATE_KEY` repository secret.
   already running, the join happens in place.
 - **Library:** favorites and recently played, with live player counts.
   Favorites are also copied into BeamMP's in-game favorites (can be turned off).
-- **Direct connect** for private and LAN servers.
+- **Direct connect** for any server, listed or not: private, LAN or
+  invite-only. Type an address (`host`, `host:port`, `[v6]:port`) and BeamLink
+  asks the server itself for its name, map, players, mods and version, using
+  the same `I` information packet BeamMP's own browser relies on. Then join.
+  Save servers to a list that shows each one's live status. This works for
+  servers hosted with [beamhost](https://github.com/codingsushi79/bmps).
 - **Account:** sign in with your BeamMP account (one HTTPS call to
   auth.beammp.com). The session key is saved as `key` in the launcher folder,
   where the official launcher expects it, so the game signs you in on its own.

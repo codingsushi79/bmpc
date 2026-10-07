@@ -1,5 +1,6 @@
 <script lang="ts">
-  import Sidebar from "./components/Sidebar.svelte";
+  import NavBar from "./components/NavBar.svelte";
+  import Direct from "./components/Direct.svelte";
   import Home from "./components/Home.svelte";
   import Browser from "./components/Browser.svelte";
   import Library from "./components/Library.svelte";
@@ -9,8 +10,6 @@
   import ServerDetail from "./components/ServerDetail.svelte";
   import Setup from "./components/Setup.svelte";
   import LogDrawer from "./components/LogDrawer.svelte";
-  import DirectConnect from "./components/DirectConnect.svelte";
-  import BeamText from "./components/BeamText.svelte";
   import Icon from "./components/Icon.svelte";
   import TitleBar from "./components/TitleBar.svelte";
   import { api } from "./lib/api";
@@ -55,20 +54,20 @@
 
 <div class="app">
   <TitleBar />
+  <NavBar />
   <div class="body">
-  <Sidebar />
   <div class="main">
     <div class="page">
       {#if booted}
         {#if store.page === "home"}<Home />
         {:else if store.page === "servers"}<Browser />
+        {:else if store.page === "direct"}<Direct />
         {:else if store.page === "library"}<Library />
         {:else if store.page === "mods"}<Mods />
         {:else if store.page === "account"}<Account />
         {:else if store.page === "settings"}<SettingsPage />{/if}
       {/if}
       <ServerDetail />
-      <DirectConnect />
     </div>
     <LogDrawer />
     <footer class="status">
@@ -76,9 +75,7 @@
         <span class="dot" class:good={!!view?.game?.launcher} class:warn={!!view?.launcher_running && !view?.game?.launcher}></span>
         BeamMP: {launcherState}
       </span>
-      {#if store.inSession}
-        <span class="item session">On <BeamText text={store.inSession.name ?? "server"} /></span>
-      {:else if view?.join_pending}
+      {#if view?.join_pending && !store.inSession}
         <span class="item pending">
           <span class="spin"><Icon name="refresh" size={12} /></span> Join queued — waiting for the game
           <button class="link" onclick={() => store.run(async () => { await api.cancelJoin(); return "Join cancelled"; })}>cancel</button>

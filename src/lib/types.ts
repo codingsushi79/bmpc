@@ -39,6 +39,7 @@ export interface Settings {
   sync_favorites: boolean;
   favorites: SavedServer[];
   recents: SavedServer[];
+  direct: SavedServer[];
   setup_done: boolean;
   accent: string;
 }
@@ -126,4 +127,11 @@ export interface ModsReport {
   cache_files: number;
   mods_dir: string | null;
   cache_dir: string;
+}
+
+export interface DirectInfo {
+  server: Server;
+  ping_ms: number | null;
+  /** False when the server answered but has its info packet switched off. */
+  details: boolean;
 }

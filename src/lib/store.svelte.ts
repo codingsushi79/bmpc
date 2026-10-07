@@ -5,7 +5,7 @@ import { api, savedFrom } from "./api";
 import { serverKey } from "./beam";
 import type { Server, SavedServer, View } from "./types";
 
-export type Page = "home" | "servers" | "library" | "mods" | "account" | "settings";
+export type Page = "home" | "servers" | "direct" | "library" | "mods" | "account" | "settings";
 
 interface Toast {
   id: number;
@@ -25,7 +25,6 @@ class Store {
   toasts = $state<Toast[]>([]);
   logOpen = $state(false);
   setupOpen = $state(false);
-  directOpen = $state(false);
 
   favoriteKeys = $derived(new Set((this.view?.settings.favorites ?? []).map(serverKey)));
   totals = $derived.by(() => {

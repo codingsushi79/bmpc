@@ -104,6 +104,7 @@ fn save_settings(state: State<AppState>, settings: Settings) -> Result<View, Str
     let mut next = settings;
     next.favorites = inner.settings.favorites.clone();
     next.recents = inner.settings.recents.clone();
+    next.direct = inner.settings.direct.clone();
     next.save()?;
     inner.paths = paths::detect(&next);
     inner.settings = next;
@@ -156,6 +157,46 @@ async fn fetch_servers(
 #[tauri::command]
 async fn ping(targets: Vec<String>) -> Result<Vec<servers::Ping>, String> {
     blocking(move || Ok(servers::ping(targets))).await
+}
+
+/// Look a server up by address (live info straight from the server).
+#[tauri::command]
+async fn query_server(address: String) -> Result<servers::DirectInfo, String> {
+    blocking(move || servers::query(&address)).await
+}
+
+/// Save a server to the Direct list. The address is normalised here so
+/// `host`, `host:30814` and `[v6]` all land as the same entry.
+#[tauri::command]
+fn save_direct(
+    state: State<AppState>,
+    address: String,
+    name: String,
+) -> Result<SavedServer, String> {
+    let (host, port) = servers::parse_address(&address)?;
+    let name = name.trim();
+    let server = SavedServer {
+        name: if name.is_empty() {
+            servers::format_address(&host, port)
+        } else {
+            name.to_string()
+        },
+        ip: host,
+        port,
+        map: String::new(),
+        at: 0,
+    };
+    let mut inner = state.lock();
+    inner.settings.save_direct(server.clone());
+    inner.settings.save()?;
+    Ok(server)
+}
+
+#[tauri::command]
+fn remove_direct(state: State<AppState>, key: String) -> Result<(), String> {
+    let mut inner = state.lock();
+    inner.settings.remove_direct(&key);
+    inner.settings.save()
 }
 
 /// Everything a launch needs, in order: companion present and re-enabled
@@ -465,6 +506,9 @@ pub fn run() {
             remove_mods,
             fetch_servers,
             ping,
+            query_server,
+            save_direct,
+            remove_direct,
             play,
             join,
             cancel_join,
