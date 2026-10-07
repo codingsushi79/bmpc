@@ -7,6 +7,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -62,3 +65,22 @@ jobs:
             src-tauri/target/release/bundle/appimage/*.AppImage
             src-tauri/target/release/bundle/dmg/*.dmg
           if-no-files-found: ignore
+
+  release:
+    # Tag a version (git tag v0.1.0 && git push --tags) and the installers
+    # from the bundle job are published as a GitHub Release.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          body: |
+            **Windows:** download `BeamLink_*_x64-setup.exe` and run it. The installer sets up BeamMP in BeamNG.drive for you.
+            **Linux:** `.AppImage` or `.deb`. **macOS:** `.dmg` (browse-only; BeamNG.drive doesn't run on macOS).

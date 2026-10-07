@@ -24,7 +24,9 @@ BeamLink (this app)                     BeamNG.drive
 
 ## Installing
 
-Run the installer (`BeamLink_x.y.z_x64-setup.exe`). After copying files it
+Download the latest installer from
+[Releases](https://github.com/codingsushi79/bmpc/releases/latest) and run
+`BeamLink_x.y.z_x64-setup.exe`. After copying files it
 runs `BeamLink --setup`, which:
 
 1. finds BeamNG.drive (BeamNG's registry key, then every Steam library that
@@ -97,7 +99,12 @@ npm run dev                               # UI only, in a browser, with a mock b
 ```
 
 The workflow in `.github/workflows/build.yml` runs the tests and builds the
-Windows installer, Linux packages and a macOS dmg on every push.
+Windows installer, Linux packages and a macOS dmg on every push. Pushing a
+version tag also publishes them as a GitHub Release:
+
+```bash
+git tag v0.1.1 && git push origin v0.1.1
+```
 
 ```bash
 cargo test --manifest-path src-tauri/Cargo.toml   # 24 tests
