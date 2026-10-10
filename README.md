@@ -79,11 +79,14 @@ CI signs the build with the `TAURI_SIGNING_PRIVATE_KEY` repository secret.
 - **Server details:** description with BeamMP `^` colour codes rendered,
   who's online, tags, every mod with its total download size (big packs are
   flagged), version, region and address.
-- **One-click join.** Join writes a request to `settings/beamlink/autojoin.json`
-  and starts BeamMP if needed. Once BeamMP is connected to its launcher, the
-  companion mod calls BeamMP's own `MPCoreNetwork.connectToServer`, so mod
-  downloads and the mod-security prompt work as normal. If the game is
-  already running, the join happens in place.
+- **One-click join.** Join writes a request to
+  `settings/beamlink/autojoin.json` and starts BeamMP if needed. The
+  companion mod then joins the way a player would in BeamMP's own menu. It
+  opens BeamMP's screen so the Terms and sign-in steps run if they're needed,
+  waits until you're signed in or have chosen *Play as guest*, switches to
+  BeamMP's server screen, and joins. BeamMP's mod-download prompt and
+  loading screen work as normal. BeamLink's status bar shows each step, and
+  if BeamMP reports a failure or a kick, BeamLink shows the reason.
 - **Library:** favorites and recently played, with live player counts.
   Favorites are also copied into BeamMP's in-game favorites (can be turned off).
 - **Direct connect** for any server, listed or not: private, LAN or

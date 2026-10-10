@@ -47,6 +47,18 @@
   });
 
   const view = $derived(store.view);
+  const ACTIVE = ["wait_launcher", "wait_login", "connect", "joining"];
+  const joining = $derived(view?.game?.join && ACTIVE.includes(view.game.join.stage) ? view.game.join : null);
+
+  // Tell the player once when a join they started fails, and why.
+  let reportedFailure = 0;
+  $effect(() => {
+    const join = view?.game?.join;
+    if (join?.stage === "failed" && join.at !== reportedFailure && Date.now() / 1000 - join.at < 120) {
+      reportedFailure = join.at;
+      store.toast(`Couldn't join ${join.name ? join.name.replace(/\^./g, "") : "the server"}: ${join.message ?? "unknown reason"}`, "err");
+    }
+  });
   const launcherState = $derived(
     !view ? "…" : view.launcher_running ? (view.game?.launcher ? "Game connected" : "Starting game…") : view.launcher_exit ?? "Not running",
   );
@@ -75,9 +87,14 @@
         <span class="dot" class:good={!!view?.game?.launcher} class:warn={!!view?.launcher_running && !view?.game?.launcher}></span>
         BeamMP: {launcherState}
       </span>
-      {#if view?.join_pending && !store.inSession}
+      {#if joining}
+        <span class="item pending" title={joining.message ?? ""}>
+          <span class="spin"><Icon name="refresh" size={12} /></span>
+          {joining.message ?? "Joining…"}
+        </span>
+      {:else if view?.join_pending && !store.inSession}
         <span class="item pending">
-          <span class="spin"><Icon name="refresh" size={12} /></span> Join queued — waiting for the game
+          <span class="spin"><Icon name="refresh" size={12} /></span> Join queued, waiting for the game
           <button class="link" onclick={() => store.run(async () => { await api.cancelJoin(); return "Join cancelled"; })}>cancel</button>
         </span>
       {/if}

@@ -77,6 +77,16 @@ export interface GameStatus {
   session: boolean;
   version: string | null;
   server: { ip: string | null; port: number | null; name: string | null } | null;
+  signed_in: boolean;
+  join: JoinProgress | null;
+}
+
+export interface JoinProgress {
+  stage: "idle" | "wait_launcher" | "wait_login" | "connect" | "joining" | "done" | "failed" | string;
+  message: string | null;
+  name: string | null;
+  /** Unix seconds the stage began. */
+  at: number;
 }
 
 export interface View {

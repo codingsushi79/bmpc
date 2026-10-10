@@ -93,6 +93,26 @@ pub struct GameStatus {
     pub version: Option<String>,
     #[serde(default)]
     pub server: Option<CurrentServer>,
+    /// Signed in to BeamMP, or chose to play as a guest.
+    #[serde(default)]
+    pub signed_in: bool,
+    /// Where the last join request got to.
+    #[serde(default)]
+    pub join: Option<JoinProgress>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct JoinProgress {
+    /// idle | wait_launcher | wait_login | connect | joining | done | failed
+    #[serde(default)]
+    pub stage: String,
+    #[serde(default)]
+    pub message: Option<String>,
+    #[serde(default)]
+    pub name: Option<String>,
+    /// Unix seconds when this stage began.
+    #[serde(default)]
+    pub at: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
